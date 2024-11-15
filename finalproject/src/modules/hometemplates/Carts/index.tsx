@@ -1,37 +1,137 @@
 import { DeleteOutlined } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalStorage } from "@uidotdev/usehooks";
-import { Button, Input, Table, TableProps } from "antd";
+import { Button, Input, notification, Spin, Table, TableProps } from "antd";
 import { Link } from "react-router-dom";
-import { getListProductInCartByUser } from "../../../apis/callapiproductincart";
-import { DataType } from "../../../types/type";
+import {
+  checkOutCartByIdUserAndIdCart,
+  getListProductInCartByUser,
+  ParamCheckOutCart,
+  ParamUpdateCarts,
+  UpdateCarts,
+  updateProductInCartByIdUSer,
+} from "../../../apis/callapiproductincart";
+import {
+  DataType,
+  NotificationType,
+  ProductCarts,
+  UserLogin,
+} from "../../../types/type";
 
+import { useEffect, useState } from "react";
+import CheckPayment from "./CheckPayment";
+import CartsLogin from "./CartsLogin";
+import dayjs from "dayjs";
 
 export default function Carts() {
-  const [drawing, setDrawing] = useLocalStorage("carts", null);
-  const id = 1;
+  const [drawing, setDrawing] = useLocalStorage<ProductCarts[] | null>(
+    "carts",
+    null
+  );
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: Infinity,
+      },
+    },
+  })
+  const [user] = useLocalStorage<UserLogin | null>("user", null);
+  const [idPayment, setIdPayment] = useState<number>(1);
+  const [checkPayment, setCheckPayment] = useState<boolean>(false);
+  const [idMoney] = useLocalStorage<number>("money");
+  const [api, contextHolder] = notification.useNotification();
+  
+  const openNotificationWithIcon = (
+    type: NotificationType,
+    message: string
+  ) => {
+    api[type]({
+      message: message,
+    });
+  };
+  const userId:number = user?.id ? user.id : 0;
   const { data, isError, isLoading } = useQuery({
-    queryKey: ["list-product-cart", id],
+    queryKey: [`list-product-cart ${userId}`],
     queryFn: () => {
-      return getListProductInCartByUser(id);
+      return getListProductInCartByUser(userId);
+    },
+  });
+  const { mutate: checkOutCart } = useMutation({
+    mutationKey: ["check-out", userId],
+    mutationFn: (param: ParamUpdateCarts) => {
+      return updateProductInCartByIdUSer(param);
+    },
+    onSuccess: () => {
+      openNotificationWithIcon("success", "Update successfully ");
+      queryClient.invalidateQueries({queryKey:[`list-product-cart ${user?.id}`],exact:true,refetchType:"all"})
+      setCheckPayment(true);
+    },
+    onError: (error) => {
+      openNotificationWithIcon("error", error.message);
     },
     retry:3,
-    retryDelay:1000
+    retryDelay:5000
   });
-  console.log(data?.data.content);
-  const listProductToCart: any = drawing ? drawing : [];
+
+  const { mutate: paymentCart } = useMutation({
+    mutationKey: ["payment", userId],
+    mutationFn:(param:ParamCheckOutCart)=>{
+      return checkOutCartByIdUserAndIdCart(param);
+    },
+    onSuccess:(data)=>{
+        if(data.data.statusCode===200){
+           openNotificationWithIcon("success",data.data.content)
+            setDrawing(null);
+            queryClient.invalidateQueries({queryKey:[`list-product-cart ${user?.id}`]})
+
+        }else{
+          openNotificationWithIcon("error",data.data.content)
+        }
+    },
+    onError:(error)=>{
+        openNotificationWithIcon("error",error.message);
+    },
+    retry:3,
+    retryDelay:5000
+  });
+  
+  const dataCarts: ProductCarts[] = data?.data.content.listProduct ? data?.data.content.listProduct:[];
+
+  
+
+  
+  let allExitd = false;
+  if (dataCarts.length > 0&&drawing && drawing.length > 0) {
+    dataCarts.forEach((item: ProductCarts) => {
+      drawing.forEach((element: ProductCarts) => {
+        if (item.id !== element.id) {
+          allExitd = true;
+        }
+      });
+    });
+  }
+
+  useEffect(()=>{
+    if (!allExitd && dataCarts.length>0) {
+      setDrawing(dataCarts);
+    }
+  },[])
+  
   const setQuantity = (index: number, found: boolean) => {
+    const newList = drawing ? [...drawing] :[];
     if (found) {
-      listProductToCart[index].quantity++;
+      newList[index].quantity++;
     } else {
-      if (listProductToCart[index].quantity > 1) {
-        listProductToCart[index].quantity--;
+      if (newList[index].quantity > 1) {
+        newList[index].quantity--;
       } else {
-        listProductToCart.splice(index, 1);
+        newList.splice(index, 1);
       }
     }
-    setDrawing(listProductToCart);
+    setCheckPayment(false);
+    setDrawing(newList);
   };
+
   const columns: TableProps<DataType>["columns"] = [
     {
       title: "Product",
@@ -39,10 +139,7 @@ export default function Carts() {
       key: "product",
       render: (item) => {
         return (
-          <Link
-            to={`/product-detail/${item.id}`}
-            className="flex items-center gap-5"
-          >
+          <Link to={`/product-detail/${item.id}`} className="flex  gap-5">
             <img
               className="rounded-md"
               width={150}
@@ -83,8 +180,9 @@ export default function Carts() {
             </div>
             <Button
               onClick={() => {
-                listProductToCart.splice(item.index, 1);
-                setDrawing(listProductToCart);
+                const newlist = drawing ? [...drawing] :[];
+                newlist.splice(item.index, 1);
+                setDrawing(newlist);
               }}
               className="border-0"
             >
@@ -99,43 +197,90 @@ export default function Carts() {
       dataIndex: "total",
       key: "total",
       render: (item) => {
-        return <>{(item * 25000).toLocaleString()}đ</>;
+        return <>{item.toLocaleString()} $</>;
       },
     },
   ];
   const listItemTable: DataType[] = [];
-  listProductToCart.forEach((element: any, index: number) => {
-    listItemTable.push({
-      key: element.id,
-      product: {
-        id: element.id,
-        content: element.content,
-        image: element.image,
-        price: element.price,
-      },
-      quantity: {
-        quantity: element.quantity,
-        index: index,
-      },
-      total: element.quantity * element.price,
+  let totalAmuont = 0;
+  if (drawing&&drawing.length > 0) {
+    drawing.forEach((element: ProductCarts, index: number) => {
+      listItemTable.push({
+        key: element.id,
+
+        product: {
+          id: element.id,
+          content: element.content,
+          image: element.image,
+          price: element.price,
+        },
+        quantity: {
+          quantity: element.quantity,
+          index: index,
+        },
+        total: element.quantity * element.price,
+      });
+      totalAmuont += element.quantity * element.price;
     });
-  });
+  }
+
+  const getIdPayment = (value: number) => {
+    setIdPayment(value);
+  };
+
+  const onClickCheckOut = () => {
+    const dataUpdate: UpdateCarts[] = [];
+    if (drawing&&drawing.length > 0) {
+      drawing.forEach((item: ProductCarts) => {
+        dataUpdate.push({
+          idProduct: item.id,
+          quantity: item.quantity,
+          createDay: dayjs().format("YYYY-MM-DDTHH:mm:ssZ"),
+        });
+      });
+    }
+    const param: ParamUpdateCarts = {
+      param: dataUpdate,
+      id_user: userId,
+      id_money: idMoney,
+      id_payment: idPayment,
+    };
+
+    checkOutCart(param);
+  };
+  
+  const onClickPaymentCart = ()=>{
+      const formData:ParamCheckOutCart = new FormData();
+      formData.append("idCart",data?.data.content.idCart)
+      formData.append("idUser",userId)
+      paymentCart(formData);
+  }
+  if(userId===0) return <CartsLogin/>
+  if (isError || isLoading) return <Spin className="container mx-auto" />;
   return (
     <div className="container mx-auto">
+      {contextHolder}
       <div className="flex justify-between items-center my-7">
         <h2 className="text-3xl font-bold">Your cart</h2>
         <Link className="underline text-[#996d43]" to={"/"}>
           continue shopping
         </Link>
       </div>
-      {listProductToCart.length > 0 ? (
-        <Table columns={columns} dataSource={listItemTable} />
-      ) : (
-        <div className="flex flex-col items-center my-36">
-          <h2 className="text-3xl font-[500] mb-7">Your cart is empty</h2>
-          <Link to={"/allproduct"}>Continue Shopping</Link>
-        </div>
-      )}
+      <Table columns={columns} dataSource={listItemTable} />
+      <div className="my-5 p-2 bg-[#fff]">
+        <CheckPayment idPayment={getIdPayment} />
+      </div>
+      <div className="flex justyfy-between items-center flex-col gap-3 p-5 bg-[white]">
+        <h2 className="text-xl font-[500]">Tổng tiền thanh toán</h2>
+        <p className="text-[red] font-[400]">{totalAmuont} $</p>
+        {checkPayment ? (
+          <Button className="bg-[#ffa834] font-[400]" onClick={onClickPaymentCart}>Thanh toán</Button>
+        ) : (
+          <Button className="bg-[#ffa834] font-[400]" onClick={onClickCheckOut}>
+            Check out
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

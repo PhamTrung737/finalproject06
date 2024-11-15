@@ -12,6 +12,7 @@ public class CartsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(name = "status")
     private boolean status;
 
     @ManyToOne

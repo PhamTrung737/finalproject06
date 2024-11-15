@@ -1,7 +1,7 @@
 package com.example.finalprojetc06.security;
 
 import com.example.finalprojetc06.dto.RolesDTO;
-import com.example.finalprojetc06.exeption.AuthenException;
+import com.example.finalprojetc06.exeption.UserException;
 import com.example.finalprojetc06.request.LoginRequest;
 import com.example.finalprojetc06.service.AuthenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class CustomAuthenProvider implements AuthenticationProvider {
 
             return new UsernamePasswordAuthenticationToken("","",authorityList);
         }else {
-            throw new AuthenException(" tài khoản mật khẩu không đúng hoặc chưa được đăng ký");
+            throw new UserException(" tài khoản mật khẩu không đúng hoặc chưa được đăng ký");
         }
 
 

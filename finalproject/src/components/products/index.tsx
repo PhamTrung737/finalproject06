@@ -1,22 +1,25 @@
 import { DownOutlined } from "@ant-design/icons";
 import { Checkbox } from "@mui/joy";
 import { Col, Pagination, PaginationProps, Row } from "antd";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Typography } from "antd";
 import { useHover, useLocalStorage } from "@uidotdev/usehooks";
-import { ListProduct, ProductProps } from "../../types/type";
+import { ListProduct, ProductCarts, ProductProps } from "../../types/type";
 
 
 export default function Products(props:ProductProps) {
-  const [found, setFound] = useState(false);
-  const [drawing, saveDrawing] = useLocalStorage("carts", null);
-  const [stock,setStock] = useState<boolean>(false)
-  const listProductToCart:any = drawing ? drawing : [];
+  
+  const [found, setFound] = useState<boolean>(false);
+  const [drawing, saveDrawing] = useLocalStorage<ProductCarts[]|null>("carts", null);
+  const [stock, setStock] = useState<boolean>(false);
+  const [outStock,setOutStock] = useState<boolean>(false);
+  const listProductToCart:ProductCarts[] = drawing ? [...drawing] : [];
+  
   const addToCart = (item:ListProduct)=>{
-    
+   
     let found = true;
-    listProductToCart.forEach((element:any) => {
+    listProductToCart.forEach((element:ProductCarts) => {
          if(element.id === item.id){
               element.quantity++;
               found= false;
@@ -28,12 +31,24 @@ export default function Products(props:ProductProps) {
    saveDrawing(listProductToCart)
   }
   
+  const handleChange2 = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStock(event.target.checked);
+  };
+
+  const handleChange3 = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setOutStock(event.target.checked);
+    
+  };
+
   const { Text } = Typography;
   const onChange: PaginationProps['onChange'] = (pageNumber) => {
-    props.getPage(pageNumber);
+    props.getPage(+pageNumber);
   };
+  const listProductProps:ListProduct[] = props?.data?.listProduct ? props?.data?.listProduct : [];
+  const numStock:number = Math.floor(listProductProps.length/3);
   const handelProduct = ()=>{
-    return props?.data?.listProduct.map((item:ListProduct)=>{
+    
+    return listProductProps.map((item:ListProduct)=>{
       const [ref, hovering] = useHover();
       const href = hovering ? item.image:item.imageHover
       if(item.image && item.imageHover){
@@ -56,6 +71,7 @@ export default function Products(props:ProductProps) {
       
     })
   }
+  
   return (
     <div className="container mx-auto py-5">
       <div className="flex justify-between">
@@ -74,11 +90,11 @@ export default function Products(props:ProductProps) {
               <div className="box-modal-product w-[300px] bg-white p-4  rounded-[15px]">
                 <div className="flex justify-between pb-5 border-b-[1px]">
                   <span>0 selected</span>
-                  <button>Reset</button>
+                  <button onClick={()=>{setOutStock(false);setStock(false)}}>Reset</button>
                 </div>
                 <div className="flex flex-col gap-5 mt-5">
-                  <Checkbox label="In stock (64)" />
-                  <Checkbox label="Out of stock (56)" />
+                  <Checkbox label={`In stock (${numStock})`} checked={stock} onChange={handleChange2}/>
+                  <Checkbox label={`Out of stock (${numStock*2})`} checked={outStock} onChange={handleChange3} />
                 </div>
               </div>
             )}

@@ -11,8 +11,10 @@ public class PaymentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @Column(name = "name")
     private String name;
-
+    @Column(name = "image")
+    private String image;
     @OneToMany(mappedBy = "payments")
     private List<CartsEntity> listCart;
 }

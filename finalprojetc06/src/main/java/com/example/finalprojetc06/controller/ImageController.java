@@ -2,14 +2,12 @@ package com.example.finalprojetc06.controller;
 
 import com.example.finalprojetc06.request.ImageBannerRequest;
 import com.example.finalprojetc06.request.ImageProductRequest;
-import com.example.finalprojetc06.response.BaseRespone;
+import com.example.finalprojetc06.response.BaseResponeOK;
 import com.example.finalprojetc06.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/image")
@@ -20,17 +18,32 @@ public class ImageController {
 
     @PostMapping("/add-product")
     public ResponseEntity<?> addImageProduct(ImageProductRequest imageProductRequest){
-        BaseRespone baseRespone = new BaseRespone(200,"Success",
+        BaseResponeOK baseResponeOK = new BaseResponeOK(
                 imageService.addImage(imageProductRequest,null));
 
-        return new ResponseEntity<>(baseRespone, HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK, HttpStatus.OK);
     }
 
     @PostMapping("/add-banner")
     public ResponseEntity<?> addImageBanner(ImageBannerRequest imageBannerRequest){
-        BaseRespone baseRespone = new BaseRespone(200,"Success",
+
+        BaseResponeOK baseResponeOK = new BaseResponeOK(
                 imageService.addImage(null,imageBannerRequest));
 
-        return new ResponseEntity<>(baseRespone, HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK, HttpStatus.OK);
     }
+
+    @GetMapping("/list-image")
+    public ResponseEntity<?> getListImage(){
+        BaseResponeOK baseResponeOK = new BaseResponeOK(imageService.getListImage());
+        return new ResponseEntity<>(baseResponeOK,HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/id={id:.+}")
+    public ResponseEntity<?> deleteImageById(@PathVariable int id){
+        BaseResponeOK baseResponeOK = new BaseResponeOK(imageService.deleteImageById(id));
+        return  new ResponseEntity<>(baseResponeOK,HttpStatus.OK);
+    }
+
+
 }

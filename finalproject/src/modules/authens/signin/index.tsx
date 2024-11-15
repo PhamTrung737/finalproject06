@@ -1,19 +1,57 @@
 import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons";
-import { Button, Card, Form, Input } from "antd";
-import  { useState } from "react";
-import { Link } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import { Button, Card, Form, Input, notification } from "antd";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { NotificationType, UserLogin, UserSignIn } from "../../../types/type";
+import { signIn } from "../../../apis/callapiauthen";
+import { useLocalStorage } from "@uidotdev/usehooks";
 
 export default function Signin() {
-  const [found, setFound] = useState(false);
-
+  const {param } = useParams()
+ 
+  const url = param === "home" ? "" :param
+  const [found, setFound] = useState<boolean>(false);
+  const [api, contextHolder] = notification.useNotification();
+  const navigate = useNavigate();
+  const [user,setUser] = useLocalStorage<UserLogin|null>("user",null);
   const [form] = Form.useForm();
+  const openNotificationWithIcon = (type: NotificationType,message:string) => {
+    api[type]({
+      message: message,
+      
+    });
+  };
+  const { mutate: checkLogin } = useMutation({
+    mutationKey: ["check-login"],
+    mutationFn: (user:any) => {
+      return signIn(user);
+    },
+    onSuccess:(data)=>{
+       if(data.data.statusCode===200){
+        setUser(data.data.content)
+        navigate(`/${url}`)
+       }else{
+        openNotificationWithIcon("error",data.data.content)
+       }
+      
+    },
+    onError(error) {
+     
+      openNotificationWithIcon("error",error.message)
+    },
+  });
 
-  const onFinish = (values: any) => {
-    console.log("Received values of form: ", values);
+  const onFinish = (values: UserSignIn) => {
+    const user = new FormData();
+    user.append("email",values.email)
+    user.append("password",values.password)
+    
+    checkLogin(user);
   };
   return (
     <div className="flex flex-col items-center justify-center py-20">
-      
+      {contextHolder}
       <Card style={{ width: "400px" }}>
         <h2 className="font-[500] text-2xl">Sign in</h2>
 
@@ -65,7 +103,7 @@ export default function Signin() {
             </Button>
           </Form.Item>
         </Form>
-        
+
         <button
           onClick={() => {
             setFound(!found);
@@ -83,10 +121,9 @@ export default function Signin() {
             </li>
           </ul>
         )}
-        
       </Card>
       <button className="bg-white py-2 w-[400px] mt-10 rounded-md">
-        <Link to={"/sign-up"}>Create  account</Link>
+        <Link to={"/sign-up"}>Create account</Link>
       </button>
     </div>
   );

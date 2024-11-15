@@ -1,0 +1,37 @@
+version: '3.8'  # Thêm phiên bản Docker Compose
+
+services:
+  yortar:
+    container_name: yortar
+    image: yortar
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - REDIS_HOST=redis06
+      - REDIS_PORT=6379
+      - SERVER_PORT=8080
+      - JWTS_KEY=${JWTS_KEY}
+      - APP_BASE_URL=http://localhost:8080/files/
+      - IMAGE_UPLOAD_PATH=/app/uploads
+    volumes:
+      - /d/uploads:/app/uploads
+    networks:
+      - local
+
+  mysql062:
+    image: mysql:latest
+    container_name: mysql062
+    ports:
+      - "3380:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - MYSQL_DATABASE=yortar
+    networks:
+      - local
+
+networks:
+  local:
+    driver: bridge

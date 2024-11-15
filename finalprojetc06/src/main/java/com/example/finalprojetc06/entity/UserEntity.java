@@ -19,6 +19,8 @@ public class UserEntity {
     private String password;
     @Column(name = "avatar")
     private String avatar;
+    @Column(name = "token_version")
+    private  int tokenVersion;
     @ManyToOne
     @JoinColumn(name = "id_roles")
     private RolesEntity roles;

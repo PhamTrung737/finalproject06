@@ -6,7 +6,7 @@ import { ItemBanner } from "../../types/type";
 
 export default function HomeCarousels() {
    const {data,isError,isLoading} = useQuery({queryKey:["banner"],queryFn:getBanner})
-   
+  
     const contentStyle: React.CSSProperties = {
         height: '600px',
         color: '#fff',
@@ -27,6 +27,7 @@ export default function HomeCarousels() {
        })
   }
   if(isError||isLoading) return <Spin className="container mx-auto"/>
+  if(data?.data.statusCode===401) return
   return (
     <Carousel autoplay={true} dots={true}>
     {handelBanner()}

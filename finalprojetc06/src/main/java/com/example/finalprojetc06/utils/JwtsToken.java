@@ -19,12 +19,12 @@ public class JwtsToken {
 
     private int expriredTime = 1000 * 60 * 60 * 24 * 5;
 
-    public String generateToke(String data){
+    public String generateToke(String data,int version,int id){
         SecretKey secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtsKey));
         Date currentDate = new Date();
         long miliSecondFuture = currentDate.getTime() + expriredTime;
         Date dateFuture = new Date(miliSecondFuture);
-        return Jwts.builder().subject(data).signWith(secretKey).expiration(dateFuture).compact();
+        return Jwts.builder().subject(data).signWith(secretKey).id(id + "").issuer(version+"").expiration(dateFuture).compact();
 
     }
 
@@ -37,4 +37,21 @@ public class JwtsToken {
                 .getSubject();
     }
 
+    public String decodeTokenID(String token){
+        SecretKey secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(jwtsKey));
+        return Jwts.parser()
+                .verifyWith(secretKey).build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getId();
+    }
+
+    public String decodeTokenVersion(String token){
+        SecretKey secretKey = Keys.hmacShaKeyFor(Decoders.BASE64URL.decode(jwtsKey));
+        return Jwts.parser()
+                .verifyWith(secretKey).build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getIssuer();
+    }
 }

@@ -1,7 +1,7 @@
 package com.example.finalprojetc06.controller;
 
 import com.example.finalprojetc06.request.CommentRequest;
-import com.example.finalprojetc06.response.BaseRespone;
+import com.example.finalprojetc06.response.BaseResponeOK;
 import com.example.finalprojetc06.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,16 +17,17 @@ public class CommentController {
 
     @PostMapping("/add-comment")
     public ResponseEntity<?> addComment(CommentRequest commentRequest){
-        BaseRespone baseRespone = new BaseRespone(200,"Success",
+        System.out.println(commentRequest);
+        BaseResponeOK baseResponeOK = new BaseResponeOK(
                 commentService.addComment(commentRequest));
-        return new ResponseEntity<>(baseRespone, HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK, HttpStatus.OK);
     }
 
     @GetMapping("/product/id={id:.+}")
     public ResponseEntity<?> getCommentByIdProduct(@PathVariable int id){
 
-        BaseRespone baseRespone = new BaseRespone(200,"Success",
+        BaseResponeOK baseResponeOK = new BaseResponeOK(
                 commentService.listCommentByIdProduct(id));
-        return new ResponseEntity<>(baseRespone,HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK,HttpStatus.OK);
     }
 }

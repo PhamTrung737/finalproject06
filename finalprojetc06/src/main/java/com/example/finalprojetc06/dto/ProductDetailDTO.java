@@ -10,5 +10,7 @@ public record ProductDetailDTO(
         String type,
         String material,
         String description,
-        String size) {
+        String size,
+        String categoryName
+) {
 }

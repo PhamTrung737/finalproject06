@@ -1,4 +1,4 @@
-import  { useState } from "react";
+import { useState } from "react";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -6,19 +6,18 @@ import {
   UserOutlined,
   SettingOutlined,
   AreaChartOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
-import { Avatar, Button, Dropdown, Layout, Menu, theme } from "antd";
+import { Avatar, Button, Dropdown, Layout, Menu, Spin, theme } from "antd";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getImageLogo } from "../../apis/callapilogo";
-
+import { getImageLogo } from "../../apis/callapiimage";
+import { useLocalStorage } from "@uidotdev/usehooks";
+import { Roles, UserLogin } from "../../types/type";
 
 const { Header, Sider, Content } = Layout;
 
 export default function AdminLayout() {
-
- 
-
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -26,9 +25,11 @@ export default function AdminLayout() {
 
   const location = useLocation();
   const navigate = useNavigate();
-
-   const {data,isLoading,isError} = useQuery({queryKey:["logo"],queryFn:getImageLogo});
-   
+  const [user] = useLocalStorage<UserLogin>("user")
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["logo"],
+    queryFn: getImageLogo,
+  });
 
   const items = [
     {
@@ -40,14 +41,25 @@ export default function AdminLayout() {
       label: <span>Đăng xuất</span>,
     },
   ];
-
+  if (isError || isLoading) return <Spin className="container mx-auto" />;
+  const roles:Roles[] = user.listRoles.filter((item:Roles)=>{
+    return item.id === 2
+  })
+  if(roles.length>0){
+    navigate("/")
+  }
   return (
     <Layout className="h-screen">
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        {!isLoading&&!isError&&(
+        {!isLoading && !isError && (
           <Link to={"/admin"} className="flex justify-center">
-          <img className="rounded-[50%]" src={data?.data.content} alt="logo" width={70} />
-        </Link>
+            <img
+              className="rounded-[50%]"
+              src={data?.data.content}
+              alt="logo"
+              width={70}
+            />
+          </Link>
         )}
         <Menu
           theme="dark"
@@ -66,16 +78,30 @@ export default function AdminLayout() {
               label: "Quản lý sản phẩm",
             },
             {
-              key: "/admin/category",
+              key: "/admin/connection",
               icon: <SettingOutlined />,
-              label: "Quản lý category",
+              label: "Quản lý connection",
             },
             {
-                key:"/admin/product-in-cart",
-                icon:<AreaChartOutlined />,
-                label:"chart "
+              key: "/admin/material",
+              icon: <SettingOutlined />,
+              label: "Quản lý material",
             },
-            
+            {
+              key: "/admin/type",
+              icon: <SettingOutlined />,
+              label: "Quản lý type",
+            },
+            {
+              key: "/admin/image",
+              icon: <PictureOutlined />,
+              label: "image",
+            },
+            {
+              key: "/admin/product-in-cart",
+              icon: <AreaChartOutlined />,
+              label: "chart ",
+            },
           ]}
           onClick={({ key }) => navigate(key)}
         />

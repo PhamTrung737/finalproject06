@@ -8,7 +8,7 @@ import {  Popover } from 'antd';
 import '@nlux/themes/nova.css';
 export default function ChatBox() {
     
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState<boolean>(false);
 
   
 

@@ -1,9 +1,6 @@
 package com.example.finalprojetc06.service.Imp;
 
-import com.example.finalprojetc06.dto.ImageDTO;
-import com.example.finalprojetc06.dto.ProductDTO;
-import com.example.finalprojetc06.dto.ProductDetailDTO;
-import com.example.finalprojetc06.dto.ProductLazyLoadDTO;
+import com.example.finalprojetc06.dto.*;
 import com.example.finalprojetc06.entity.*;
 import com.example.finalprojetc06.exeption.ProductExeption;
 
@@ -134,28 +131,20 @@ public class ProductServiceImp implements ProductService {
         Optional<TypeEntity> type = typeRepository.findById(productUpdate.idType());
         Optional<CategoryEntity> category = categoryRepository.findById(productUpdate.idCategory());
 
-        Optional<MetarialEntity> metarial = metarialRepository.findById(productUpdate.idMetarial());
+        Optional<MetarialEntity> metarial = metarialRepository.findById(productUpdate.idMaterial());
 
         if(product.isPresent()&&type.isPresent()&&metarial.isPresent()&&category.isPresent()){
-            ProductEntity productEntity = new ProductEntity();
-            productEntity.setId(id);
+            ProductEntity productEntity = product.get();
+            productEntity.setTypes(type.get());
+            productEntity.setCategorys(category.get());
+            productEntity.setMetarials(metarial.get());
             productEntity.setName(productUpdate.name());
-            productEntity.setDescription(productUpdate.description());
             productEntity.setSize(productUpdate.size());
+            productEntity.setDescription(productUpdate.description());
             productEntity.setPrice(productUpdate.price());
-            MetarialEntity metarial1 = new MetarialEntity();
-            metarial1.setId(productUpdate.idMetarial());
-            TypeEntity type1 = new TypeEntity();
-            type1.setId(productUpdate.idType());
-            CategoryEntity category1 = new CategoryEntity();
-            category1.setId(productUpdate.idCategory());
-            productEntity.setCategorys(category1);
-            productEntity.setTypes(type1);
-            productEntity.setMetarials(metarial1);
-
             return convertProductEntityToProductDetailDTO(productRepository.save(productEntity));
         }else {
-            throw new ProductExeption("product or type or category empty");
+            throw new ProductExeption("The product ID or type ID or category ID does not exist.");
         }
 
     }
@@ -165,11 +154,13 @@ public class ProductServiceImp implements ProductService {
     public ProductLazyLoadDTO getProductByIdConnection(int idConnection, int page, int pageSize) {
         Pageable pageable = PageRequest.of(page,pageSize);
         ConnectionEntity connection ;
+
         Optional<ConnectionEntity> connection1 = connectionRepository.findById(idConnection);
         if(connection1.isPresent()){
             connection = connection1.get();
+
         }else {
-            throw new ProductExeption("Id connection empty");
+            throw new ProductExeption("The connection ID does not exist.");
         }
         return convertProductEntityToProductLazyLoadDTO(productRepository.findProductEntityByConnections(connection,pageable),
                 productRepository.findProductEntityByConnections(connection));
@@ -179,25 +170,33 @@ public class ProductServiceImp implements ProductService {
     public ProductDetailDTO updateProductFollowConnection(int id, int idConnection) {
         Optional<ProductEntity> product = productRepository.findById(id);
         Optional<ConnectionEntity> connection = connectionRepository.findById(idConnection);
-        System.out.println(id);
-        System.out.println(idConnection);
         if(product.isPresent()&&connection.isPresent()){
-            ProductEntity productEntity = new ProductEntity();
-            productEntity.setId(id);
-            productEntity.setName(product.get().getName());
-            productEntity.setPrice(product.get().getPrice());
-            productEntity.setDescription(product.get().getDescription());
-            productEntity.setSize(product.get().getSize());
-            productEntity.setTypes(product.get().getTypes());
-            productEntity.setCategorys(product.get().getCategorys());
-            productEntity.setMetarials(product.get().getMetarials());
-            ConnectionEntity connection1 = new ConnectionEntity();
-            connection1.setId(idConnection);
-            productEntity.setConnections(connection1);
+            ProductEntity productEntity = product.get();
+            productEntity.setConnections(connection.get());
             return convertProductEntityToProductDetailDTO(productRepository.save(productEntity));
         }else {
-            throw new ProductExeption("product or connection empty");
+            throw new ProductExeption("The product ID or connection ID does not exist.");
         }
+    }
+
+    @Override
+    public List<ProductAdminDTO> getAllProductByRoleAdmin() {
+        return productRepository.findAll().stream().map(item->{
+            int idConnection = 0;
+            if(item.getConnections() != null){
+                idConnection = item.getConnections().getId();
+            }
+            String url = "";
+            if(!item.getListImage().isEmpty()){
+                url = baseUrl+item.getListImage().get(0).getImage();
+            }
+            return new ProductAdminDTO(item.getId(),url,item.getPrice(),item.getName(),item.getDescription(),
+                    item.getTypes().getId(),
+                    item.getSize(),
+                    item.getMetarials().getId(),
+                    item.getCategorys().getId(),
+                    idConnection);
+        }).toList();
     }
 
 
@@ -230,7 +229,8 @@ public class ProductServiceImp implements ProductService {
                 product1.getTypes().getDescription(),
                 product1.getMetarials().getDescription(),
                 product1.getDescription(),
-                product1.getSize()
+                product1.getSize(),
+                product1.getCategorys().getParam()
         );
     }
 }

@@ -67,3 +67,31 @@ body{
     bottom: 3px;
     right: 3px;
 }
+
+.logo-avatar{
+     width: 60px;
+     height: 60px;
+     object-fit: cover;
+     border-radius: 50%;
+}
+
+.RelatedProducts-box{
+    background-color: #fff;
+    padding: 10px ;
+    box-shadow: 1px -4px 12px 2px #CFD8DC;
+    border-radius: 8px;
+}
+.RelatedProducts-box img{
+    box-shadow: 1px -4px 12px 2px #CFD8DC;
+    transition: 0.5s ease-in-out;
+}
+.RelatedProducts-box img:hover{
+   transform: scale(110%);
+}
+.admin-user-select-roles{
+    border: 1px solid #d9d9d9;
+    width: 100%;
+    padding: 7px 11px;
+    margin-top: 4px;
+    border-radius: 8px;
+}

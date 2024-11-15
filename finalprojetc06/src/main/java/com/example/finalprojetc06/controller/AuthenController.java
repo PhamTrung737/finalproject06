@@ -1,8 +1,10 @@
 package com.example.finalprojetc06.controller;
 
+import com.example.finalprojetc06.dto.UserAuthenDTO;
 import com.example.finalprojetc06.request.AuthenRequest;
+import com.example.finalprojetc06.request.ChangePasswordRequest;
 import com.example.finalprojetc06.request.LoginRequest;
-import com.example.finalprojetc06.response.BaseRespone;
+import com.example.finalprojetc06.response.BaseResponeOK;
 import com.example.finalprojetc06.service.AuthenService;
 import com.example.finalprojetc06.utils.JwtsToken;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,8 +16,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,28 +41,41 @@ public class AuthenController {
     @PostMapping("/signup")
     public ResponseEntity<?> addUser( AuthenRequest authenRequest){
 
-        BaseRespone baseRespone = new BaseRespone(200,"Success",
+        BaseResponeOK baseResponeOK = new BaseResponeOK(
                 authenService.addUser(authenRequest));
 
-        return new ResponseEntity<>(baseRespone, HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK, HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> checkLogin(LoginRequest loginRequest) throws JsonProcessingException {
+    public ResponseEntity<?> checkLogin(LoginRequest loginRequest) throws  JsonProcessingException {
+        BaseResponeOK baseResponeOK = new BaseResponeOK( generateToke(loginRequest));
 
+        return new ResponseEntity<>(baseResponeOK,HttpStatus.OK);
+    }
+
+    @PostMapping("/change-pass")
+    public ResponseEntity<?> changePasswordUser(ChangePasswordRequest changePasswordRequest) throws JsonProcessingException {
+
+
+        BaseResponeOK baseResponeOK = new BaseResponeOK(authenService.changePassByUser(changePasswordRequest));
+        return  new ResponseEntity<>(baseResponeOK,HttpStatus.OK);
+    }
+
+    public UserAuthenDTO generateToke (LoginRequest loginRequest) throws JsonProcessingException {
         UsernamePasswordAuthenticationToken authenToken =
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),loginRequest.getPassword());
         Authentication authentication =  authenticationManager.authenticate(authenToken);
 
 
         List<GrantedAuthority> listRole =(List<GrantedAuthority>) authentication.getAuthorities();
-
         String data = objectMapper.writeValueAsString(listRole);
 
-        String token = jwtsToken.generateToke(data);
+        UserAuthenDTO userAuthenDTO = authenService.getUserByLogin(loginRequest);
+        String token = jwtsToken.generateToke(data, userAuthenDTO.getVersion(),userAuthenDTO.getId());
 
-        BaseRespone baseRespone = new BaseRespone(200,"success",token);
-
-        return new ResponseEntity<>(baseRespone,HttpStatus.OK);
+        userAuthenDTO.setToken(token);
+        return userAuthenDTO;
     }
+
 }

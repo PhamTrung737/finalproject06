@@ -4,6 +4,8 @@ import com.example.finalprojetc06.dto.CommentDTO;
 import com.example.finalprojetc06.entity.CommentEntity;
 import com.example.finalprojetc06.entity.ProductEntity;
 import com.example.finalprojetc06.entity.UserEntity;
+import com.example.finalprojetc06.exeption.CommentException;
+import com.example.finalprojetc06.exeption.ProductExeption;
 import com.example.finalprojetc06.repository.CommentRepository;
 import com.example.finalprojetc06.repository.ProductRepository;
 import com.example.finalprojetc06.repository.UsersRepository;
@@ -11,6 +13,9 @@ import com.example.finalprojetc06.request.CommentRequest;
 import com.example.finalprojetc06.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -36,45 +41,57 @@ public class CommentServiceImp implements CommentService {
         Optional<UserEntity> user = usersRepository.findById(commentRequest.idUser());
         Optional<ProductEntity> product = productRepository.findById(commentRequest.idProduct());
         if(user.isPresent()&&product.isPresent()){
-            ProductEntity productEntity = new ProductEntity();
-            productEntity.setId(commentRequest.idProduct());
-            UserEntity userEntity = new UserEntity();
-            userEntity.setId(commentRequest.idUser());
             CommentEntity comment = new CommentEntity();
-            comment.setEvaluate(commentRequest.evaluate());
             comment.setDescription(commentRequest.content());
-            comment.setProducts(productEntity);
-            comment.setUsers(userEntity);
+            comment.setEvaluate(commentRequest.evaluate());
+            comment.setUsers(user.get());
+            comment.setProducts(product.get());
             comment.setCreateDay(commentRequest.createDay());
             CommentEntity comment1 = commentRepository.save(comment);
-            System.out.println(comment1);
+            String url = "";
+            if(!comment1.getUsers().getAvatar().isEmpty()){
+                url = baseUrl + comment1.getUsers().getAvatar();
+            }
             return new CommentDTO(comment1.getId(),
-                    baseUrl+comment1.getUsers().getAvatar(),
+
                     comment1.getUsers().getFullName(),
+                    url,
                     comment1.getDescription(),
                     comment1.getEvaluate(),
                     comment1.getCreateDay());
+        }else {
+            throw new CommentException("The user ID or product ID does not exist.");
         }
 
-        return null;
+
     }
 
     @Override
     public List<CommentDTO> listCommentByIdProduct(int idProduct) {
         Optional<ProductEntity> productEntity = productRepository.findById(idProduct);
+
         if(productEntity.isPresent()){
             ProductEntity product = new ProductEntity();
             product.setId(idProduct);
-            return commentRepository.findCommentEntitiesByProducts(product).stream().map(item->{
+            List<CommentEntity> listComment = commentRepository.findCommentEntitiesByProducts(product);
+            return listComment.stream().map(item->{
+                String url = "";
+                if(!item.getUsers().getAvatar().isEmpty()){
+                    url = baseUrl + item.getUsers().getAvatar();
+                }
                 return new CommentDTO(item.getId(),
-                        baseUrl+item.getUsers().getAvatar(),
+
                         item.getUsers().getFullName(),
+                        url,
                         item.getDescription(),
                         item.getEvaluate(),
                         item.getCreateDay());
             }).toList();
+
+        }else {
+            throw new ProductExeption("The product ID does not exist.");
         }
 
-        return null;
+
     }
 }

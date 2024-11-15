@@ -1,12 +1,14 @@
 package com.example.finalprojetc06.service.Imp;
 
 import com.example.finalprojetc06.dto.BannerDTO;
+import com.example.finalprojetc06.dto.ListImageDTO;
 import com.example.finalprojetc06.entity.ImageEntity;
 import com.example.finalprojetc06.entity.ProductEntity;
 import com.example.finalprojetc06.exeption.ImageException;
 import com.example.finalprojetc06.repository.ImageRepository;
 import com.example.finalprojetc06.request.ImageBannerRequest;
 import com.example.finalprojetc06.request.ImageProductRequest;
+import com.example.finalprojetc06.service.FileService;
 import com.example.finalprojetc06.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,9 @@ public class ImageServiceImp implements ImageService {
 
     @Value("${app.base-url}")
     private String baseUrl;
+
+    @Autowired
+    private FileService fileService;
 
     @Override
     public String getImageLogo() {
@@ -47,7 +52,7 @@ public class ImageServiceImp implements ImageService {
             ImageEntity img = image.get();
             link =baseUrl+ img.getImage();
         }else {
-            throw new ImageException("logo home empty");
+            throw new ImageException("The image logo home does not exist");
         }
 
         return link;
@@ -62,10 +67,12 @@ public class ImageServiceImp implements ImageService {
     public ImageEntity addImage(ImageProductRequest imageProductRequest, ImageBannerRequest imageBannerRequest) {
         ImageEntity  image = new ImageEntity();
         if(imageBannerRequest != null){
+            fileService.save(imageBannerRequest.image());
             image.setImage(imageBannerRequest.image().getOriginalFilename());
-            image.setBanner(imageBannerRequest.idBanner());
+            image.setBanner(true);
         }
         if(imageProductRequest != null){
+            fileService.save(imageProductRequest.image());
             image.setImage(imageProductRequest.image().getOriginalFilename());
             ProductEntity product = new ProductEntity();
             product.setId(imageProductRequest.idProduct());
@@ -73,5 +80,38 @@ public class ImageServiceImp implements ImageService {
         }
 
         return imageRepository.save(image);
+    }
+
+    @Override
+    public List<ListImageDTO> getListImage() {
+        return imageRepository.findAll().stream().map(items->{
+            String url="";
+            String type= "";
+            if(items.getImage()!=null){
+                url= baseUrl+items.getImage();
+            }
+            if(items.isBanner()){
+                type="BANNER";
+            }
+            if(!items.isBanner()&&items.getProducts()==null){
+                type="LOGO";
+            }
+            if(items.getProducts() != null){
+                type = items.getProducts().getName();
+            }
+            return new ListImageDTO(items.getId(),url,type);
+
+        }).toList();
+    }
+
+    @Override
+    public String deleteImageById(int id) {
+        Optional<ImageEntity> image= imageRepository.findById(id);
+        if(image.isPresent()&&id>2){
+            imageRepository.deleteById(id);
+            return "Delete image success";
+        }else {
+            throw new ImageException("The image ID does not exist, or that ID is not allowed to be deleted.");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.finalprojetc06.service;
 
+import com.example.finalprojetc06.dto.ProductAdminDTO;
 import com.example.finalprojetc06.dto.ProductDTO;
 import com.example.finalprojetc06.dto.ProductDetailDTO;
 import com.example.finalprojetc06.dto.ProductLazyLoadDTO;
@@ -18,4 +19,5 @@ public interface ProductService {
         ProductDetailDTO updateProductById(int id,ProductUpdate productUpdate);
         ProductLazyLoadDTO getProductByIdConnection(int idConnection,int page,int pageSize);
         ProductDetailDTO updateProductFollowConnection (int id,int idConnection);
+        List<ProductAdminDTO> getAllProductByRoleAdmin();
 }

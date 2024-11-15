@@ -4,15 +4,23 @@ import { Link } from "react-router-dom";
 import { handelNavBar, productPersonStore } from "./Root";
 import Search from "./Search";
 import { useQuery } from "@tanstack/react-query";
-import { getLogoHome } from "../../apis/callapilogohome";
+
 import { useLocalStorage } from "@uidotdev/usehooks";
+import IconUser from "./loginuser/IconUser";
+import { iconUser, ProductCarts, UserLogin } from "../../types/type";
+
+import { getLogoHome } from "../../apis/callapiimage";
 
 export default function Header() {
   const found = productPersonStore((state) => state.found);
   const setFound = productPersonStore((state) => state.setFoundModal);
-  const {data,isError,isLoading} = useQuery({queryKey:["logo-home"],queryFn:getLogoHome})
-  const [drawing] = useLocalStorage("carts", null);
-  const listProductToCart:any = drawing ? drawing : [];
+  const [user,setUser] = useLocalStorage<UserLogin|null>("user",null);
+  const {data,isError,isLoading} = useQuery({queryKey:["logo-home"],queryFn:getLogoHome,retry:3,retryDelay:5000})
+  const [drawing] = useLocalStorage<ProductCarts[]|null>("carts", null);
+  if(data?.data.statusCode===401){
+    setUser(null)
+  }
+
   if(isError||isLoading) return <Spin className="container mx-auto"/>
   return (
     <div>
@@ -36,6 +44,7 @@ export default function Header() {
             ></path>
           </svg>
         </Link>
+        
       </div>
       <div className="container mx-auto">
         {!found && (
@@ -58,24 +67,11 @@ export default function Header() {
               />
               </Link>
               <div className="flex items-center gap-3">
-                <Link to={"/login"}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    focusable="false"
-                    role="presentation"
-                    style={{ width: "1.5rem" }}
-                    fill="none"
-                    viewBox="0 0 18 19"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M6 4.5a3 3 0 116 0 3 3 0 01-6 0zm3-4a4 4 0 100 8 4 4 0 000-8zm5.58 12.15c1.12.82 1.83 2.24 1.91 4.85H1.51c.08-2.6.79-4.03 1.9-4.85C4.66 11.75 6.5 11.5 9 11.5s4.35.26 5.58 1.15zM9 10.5c-2.5 0-4.65.24-6.17 1.35C1.27 12.98.5 14.93.5 18v.5h17V18c0-3.07-.77-5.02-2.33-6.15-1.52-1.1-3.67-1.35-6.17-1.35z"
-                      fill="currentColor"
-                    ></path>
-                  </svg>
+                {user?(<IconUser/>):(
+                  <Link to={"/login/home"}>
+                  {iconUser()}
                 </Link>
+                )}
                 <Link to={"/cart"} className="header__carts">
                   <svg
                     style={{ width: "3.25rem" }}
@@ -92,7 +88,7 @@ export default function Header() {
                       fillRule="evenodd"
                     ></path>
                   </svg>
-                  <span>{listProductToCart.length}</span>
+                  <span>{drawing?.length ? drawing.length:0}</span>
                 </Link>
                 
               </div>

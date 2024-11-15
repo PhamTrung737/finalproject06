@@ -1,6 +1,6 @@
 package com.example.finalprojetc06.controller;
 
-import com.example.finalprojetc06.response.BaseRespone;
+import com.example.finalprojetc06.response.BaseResponeOK;
 import com.example.finalprojetc06.service.FileService;
 import com.example.finalprojetc06.service.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("files")
+@RequestMapping("/files")
 
 public class FileController {
     @Autowired
@@ -20,7 +20,7 @@ public class FileController {
     @Autowired
     private ImageService imageService;
 
-    @GetMapping("{filename:.+}")
+    @GetMapping("/{filename:.+}")
     public ResponseEntity<?> uploadFile(@PathVariable String filename){
         Resource file = fileService.load(filename);
         return ResponseEntity.ok()
@@ -29,22 +29,22 @@ public class FileController {
 
     @GetMapping("/logo")
     public ResponseEntity<?> getImageLogo(){
-        BaseRespone baseRespone = new BaseRespone(200,"!Success",imageService.getImageLogo());
+        BaseResponeOK baseResponeOK = new BaseResponeOK(imageService.getImageLogo());
 
-        return new ResponseEntity<>(baseRespone, HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK, HttpStatus.OK);
     }
 
     @GetMapping("/logo-home")
     public ResponseEntity<?> getImageLogoHome(){
-        BaseRespone baseRespone = new BaseRespone(200,"!Success",imageService.getImageLogoHome());
+        BaseResponeOK baseResponeOK = new BaseResponeOK(imageService.getImageLogoHome());
 
-        return new ResponseEntity<>(baseRespone, HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK, HttpStatus.OK);
     }
 
     @GetMapping("/banner")
     public ResponseEntity<?> getImageBanner(){
-        BaseRespone baseRespone = new BaseRespone(200,"!Success",imageService.getBanner());
+        BaseResponeOK baseResponeOK = new BaseResponeOK(imageService.getBanner());
 
-        return new ResponseEntity<>(baseRespone,HttpStatus.OK);
+        return new ResponseEntity<>(baseResponeOK,HttpStatus.OK);
     }
 }

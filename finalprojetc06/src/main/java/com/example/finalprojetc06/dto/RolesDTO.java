@@ -1,4 +1,4 @@
 package com.example.finalprojetc06.dto;
 
-public record RolesDTO(String roles) {
+public record RolesDTO(int id,String roles) {
 }

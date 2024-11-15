@@ -52,7 +52,7 @@ public class CategoryServiceImp implements CategoryService {
             categoryRepository.deleteById(id);
             return "Delete Category Success";
         }else {
-            throw new CategoryException("id category empty");
+            throw new CategoryException("The category ID does not exist.");
         }
 
     }
@@ -70,7 +70,7 @@ public class CategoryServiceImp implements CategoryService {
            return categoryRepository.save(category);
 
         }else {
-            throw new CategoryException("category empty");
+            throw new CategoryException("The category ID does not exist.");
         }
 
     }

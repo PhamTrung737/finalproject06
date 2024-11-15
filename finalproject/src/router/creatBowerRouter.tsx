@@ -14,9 +14,13 @@ import AdminLayout from "../layouts/adminpages";
 import AdminUser from "../modules/admintemplates/adminuser";
 import AdminChart from "../modules/admintemplates/adminchart";
 import AdminProduct from "../modules/admintemplates/adminproduct";
-import AdminCategory from "../modules/admintemplates/admincategory";
 import Carts from "../modules/hometemplates/Carts";
 import ConnectionDetail from "../modules/hometemplates/AllConection/ConnectionDetail";
+import AdminImage from "../modules/admintemplates/adminimage/AdminImage";
+import ProfileUser from "../modules/hometemplates/profile/ProfileUser";
+import AdminConnection from "../modules/admintemplates/adminconnection";
+import AdminType from "../modules/admintemplates/admintype/AdminType";
+import AdminMaterial from "../modules/admintemplates/adminmaterial/AdminMaterial";
 
 export const router = createBrowserRouter([
     {
@@ -31,10 +35,11 @@ export const router = createBrowserRouter([
         {path:"/announcement",element:<Announcement/>},
         {path:"/announcement/:id",element:<AnnouncementPages/>},
         {path:"/product-detail/:id",element:<ProductDetail/>},
-        {path:"/login",element:<Signin/>},
+        {path:"/login/:param",element:<Signin/>},
         {path:"/sign-up",element:<SignUp/>},
         {path:"/cart",element:<Carts/>},
-        {path:"/allconection/:id",element:<ConnectionDetail/>}
+        {path:"/allconection/:id",element:<ConnectionDetail/>},
+        {path:"/profile",element:<ProfileUser/>}
       ]
     },
     {
@@ -44,7 +49,10 @@ export const router = createBrowserRouter([
         {path:"/admin/user",element:<AdminUser/>},
         {path:"/admin/product-in-cart",element:<AdminChart/>},
         {path:"/admin/product",element:<AdminProduct/>},
-        {path:"/admin/category",element:<AdminCategory/>}
+        {path:"/admin/connection",element:<AdminConnection/>},
+        {path:"/admin/type",element:<AdminType/>},
+        {path:"/admin/material",element:<AdminMaterial/>},
+        {path:"/admin/image",element:<AdminImage/>}
       ]
     }
     

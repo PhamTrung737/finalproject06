@@ -9,9 +9,9 @@ import { ItemSelectMoney } from "../../types/type";
 
 
 export default function Footer() {
-  const [money,setMoney] = useState(1);
+  const [money,setMoney] = useState<number>(1);
   const [drawing, saveDrawing] = useLocalStorage("money", 1);
-  const {data,isError,isLoading} = useQuery({queryKey:["money"],queryFn:getListMoney})
+  const {data,isError,isLoading} = useQuery({queryKey:["money"],queryFn:getListMoney,retry:3,retryDelay:5000})
   const handelSelect = ()=>{
     return data?.data.content.map((items:ItemSelectMoney)=>{
         return (
@@ -21,6 +21,7 @@ export default function Footer() {
 }
   useEffect(()=>{saveDrawing(money)},[money])
   if(isError||isLoading) return <Spin className="container mx-auto"/>
+  if(data?.data.statusCode ===401) return
   return (
     <div className="container mx-auto py-5">
       <Row className="justify-between border-b-[1px] pb-3 mb-7">

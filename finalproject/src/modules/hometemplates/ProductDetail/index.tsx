@@ -1,19 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import {  Carousel, Col, Image, Row, Spin } from "antd";
-import { useState } from "react";
+import {  useState } from "react";
 import { useParams } from "react-router-dom";
 import { getProductDetail } from "../../../apis/callapiproduct";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import { useLocalStorage } from "@uidotdev/usehooks";
 
 import Comment from "./comment";
-import { ImageItem, ListProduct } from "../../../types/type";
+import { ImageItem,  ListProduct,  ProductCarts } from "../../../types/type";
+import RelatedProducts from "./RelatedProducts";
+
 
 export default function ProductDetail() {
-    const [quantity,setQty] = useState(1)
+    const [quantity,setQty] = useState<number>(1)
     const {id} = useParams();
-    const [drawing, saveDrawing] = useLocalStorage("carts", null);
-    const listProductToCart:any = drawing ? drawing : [];
+    const [drawing, saveDrawing] = useLocalStorage<ProductCarts[]|null>("carts", null);
+    const listProductToCart:ProductCarts[] = drawing ? [...drawing] : [];
  
 
     const {data,isError,isLoading}= useQuery({queryKey:["product-detail",id],queryFn:()=>getProductDetail(Number(id))})
@@ -28,7 +30,8 @@ export default function ProductDetail() {
             )
         })
     }
-   
+    
+ 
     const addToCart = ()=>{
         const item:ListProduct = {
             id:Number(id),
@@ -49,7 +52,9 @@ export default function ProductDetail() {
      }
        saveDrawing(listProductToCart)
       }
-
+  
+    
+    
     if(isError||isLoading) return <Spin className="container mx-auto"/>
   return (
     <div className="container mx-auto py-10">
@@ -98,8 +103,14 @@ export default function ProductDetail() {
         </p>
         </Col>
      </Row>
-      <Row className="mt-5">
-        <Col span={12}><Comment/></Col>
+      <Row className="mt-10" gutter={70}>
+        <Col span={12}>
+        <Comment idProduct={id?+id:0}/>
+        
+        </Col>
+        <Col span={12}>
+        <RelatedProducts id={id?+id:0}/>
+        </Col>
       </Row>
     </div>
   )
